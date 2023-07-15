@@ -4,10 +4,10 @@ import pennylane as qml
 from scipy.optimize import OptimizeResult
 
 
-def ham_gradient_descent(fun, x0, hamiltonian, stepsize=0.1, tol=1e-4, maxiter=100,  verbose=False, **options):
+def gradient_descent(fun, x0, stepsize=0.1, tol=1e-4, maxiter=100,  verbose=False, **options):
 
     new_params = np.array(x0)
-    ref_energy = fun(new_params, hamiltonian)
+    ref_energy, grad = fun(new_params)
 
     energy_evolution = [ref_energy]
 
@@ -15,12 +15,10 @@ def ham_gradient_descent(fun, x0, hamiltonian, stepsize=0.1, tol=1e-4, maxiter=1
 
     for i in range(maxiter):
         niter += 1
-        grad = np.array(qml.gradients.param_shift(fun)
-                        (new_params, hamiltonian))
 
         new_params -= grad*stepsize
 
-        new_energy = fun(new_params, hamiltonian)
+        new_energy, grad = fun(new_params)
 
         energy_evolution.append(new_energy)
 
@@ -37,9 +35,9 @@ def ham_gradient_descent(fun, x0, hamiltonian, stepsize=0.1, tol=1e-4, maxiter=1
     return OptimizeResult(x=new_params, nit=niter, fun=energy_evolution)
 
 
-def ham_spsa_optimizer(fun, x0, hamiltonian, maxiter=100, alpha=0.602, gamma=0.101, c=0.2, A=None, a=None, tol=1e-4, verbose=False, **options):
+def spsa_optimizer(fun, x0, maxiter=100, alpha=0.602, gamma=0.101, c=0.2, A=None, a=None, tol=1e-4, verbose=False, **options):
     new_params = np.array(x0)
-    ref_energy = fun(new_params, hamiltonian)
+    ref_energy, _ = fun(new_params)
 
     energy_evolution = [ref_energy]
 
@@ -61,14 +59,14 @@ def ham_spsa_optimizer(fun, x0, hamiltonian, maxiter=100, alpha=0.602, gamma=0.1
 
         thetaplus = new_params+ck*delta
         thetaminus = new_params-ck*delta
-        yplus = fun(thetaplus, hamiltonian)
-        yminus = fun(thetaminus, hamiltonian)
+        yplus, _ = fun(thetaplus)
+        yminus, _ = fun(thetaminus)
 
         grad = np.array([(yplus - yminus) / (2 * ck * di) for di in delta])
 
         new_params -= ak*grad
 
-        new_energy = fun(new_params, hamiltonian)
+        new_energy, _ = fun(new_params)
 
         energy_evolution.append(new_energy)
 
@@ -85,9 +83,9 @@ def ham_spsa_optimizer(fun, x0, hamiltonian, maxiter=100, alpha=0.602, gamma=0.1
     return OptimizeResult(x=new_params, nit=niter, fun=energy_evolution)
 
 
-def ham_adam(fun, x0, hamiltonian, maxiter=100, stepsize=0.01, beta1=0.9, beta2=0.99, tol=1e-4, eps=1e-08, verbose=False, demon=False, adamax=False, weight_decay=0, **options):
+def adam(fun, x0, maxiter=100, stepsize=0.01, beta1=0.9, beta2=0.99, tol=1e-4, eps=1e-08, verbose=False, demon=False, adamax=False, weight_decay=0, **options):
     new_params = np.array(x0)
-    ref_energy = fun(new_params, hamiltonian)
+    ref_energy, grad = fun(new_params)
 
     energy_evolution = [ref_energy]
 
@@ -100,9 +98,6 @@ def ham_adam(fun, x0, hamiltonian, maxiter=100, stepsize=0.01, beta1=0.9, beta2=
 
     for i in range(maxiter):
         niter += 1
-
-        grad = np.array(qml.gradients.param_shift(fun)
-                        (new_params, hamiltonian))
 
         if demon:
             p_t = 1 - i / maxiter
@@ -128,78 +123,7 @@ def ham_adam(fun, x0, hamiltonian, maxiter=100, stepsize=0.01, beta1=0.9, beta2=
 
         new_params -= stepsize*step
 
-        new_energy = fun(new_params, hamiltonian)
-
-        energy_evolution.append(new_energy)
-
-        if (verbose and i % 10 == 0):
-            print("ADAM - Step: ", i, " Cost: ", new_energy)
-
-        if (np.abs(new_energy-ref_energy) < tol):
-            break
-        else:
-            ref_energy = new_energy
-
-    print("Finished ADAM training")
-
-    return OptimizeResult(x=new_params, nit=niter, fun=energy_evolution)
-
-
-def ham_adam_SPSA(fun, x0, hamiltonian, maxiter=100, stepsize=0.01, beta1=0.9, beta2=0.99, tol=1e-4, eps=1e-08, verbose=False, demon=False, adamax=False, weight_decay=0, **options):
-    new_params = np.array(x0)
-    ref_energy = fun(new_params, hamiltonian)
-
-    energy_evolution = [ref_energy]
-
-    m = np.zeros_like(x0)
-    v = np.zeros_like(x0)
-
-    niter = 0
-
-    v_hat_use = np.zeros_like(x0)
-
-    c = 0.2
-    gamma = 0.101
-
-    for i in range(maxiter):
-        niter += 1
-
-        ck = c/np.power(i+1, gamma)
-
-        delta = np.random.choice([-1, 1], size=x0.shape)
-
-        thetaplus = new_params+ck*delta
-        thetaminus = new_params-ck*delta
-        yplus = fun(thetaplus, hamiltonian)
-        yminus = fun(thetaminus, hamiltonian)
-
-        grad = np.array([(yplus - yminus) / (2 * ck * di) for di in delta])
-
-        if demon:
-            p_t = 1 - i / maxiter
-            beta1_use = beta1 * (p_t / (1 - beta1 + beta1 * p_t))
-        else:
-            beta1_use = beta1
-
-        m = beta1_use*m + (1-beta1_use)*grad
-        v = beta2*v + (1-beta2)*np.square(grad)
-
-        mhat = m/(1-beta1_use**(i+1))
-
-        vhat = v/(1-beta2**(i+1))
-
-        if adamax:
-            v_hat_use = np.maximum(v_hat_use, np.abs(vhat))
-        else:
-            v_hat_use = vhat
-
-        step = mhat / \
-            (np.array([np.sqrt(vhat_i) + eps for vhat_i in v_hat_use])
-             ) + new_params*weight_decay
-
-        new_params -= stepsize*step
-
-        new_energy = fun(new_params, hamiltonian)
+        new_energy, grad = fun(new_params)
 
         energy_evolution.append(new_energy)
 
