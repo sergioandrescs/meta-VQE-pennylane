@@ -2,7 +2,7 @@
 
 Notebook that run meta-VQE, opt-meta-VQE, and VQE. Code inspired on work about [The Meta-Variational Quantum Eigensolver](https://arxiv.org/pdf/2009.13545.pdf).
 
-To run the calculationsin Pennylane [Catalyst](https://docs.pennylane.ai/projects/catalyst/en/latest/index.html) is used to acceslerate the calculations. The speed improvement is impresive, compared to the use of simple Pennylane devices.
+To run the calculationsin Pennylane [Catalyst](https://docs.pennylane.ai/projects/catalyst/en/latest/index.html) is used to accelerate the calculations. The speed improvement is impresive, compared to the use of simple Pennylane devices. Result are saved in JSON files, and the data structure use can be seen at the begining of the notebooks.
 
 ## Ansatz
 
