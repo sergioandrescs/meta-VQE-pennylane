@@ -1,3 +1,4 @@
+# %%
 from custom_optimizers import gradient_descent, spsa_optimizer, adam
 import numpy as np
 import pennylane as qml
@@ -47,7 +48,7 @@ SHOTS = 10000  # 1000, None. If none is used, the result is analytic
 
 WIRES = qubits
 
-USE_SINGLES = True
+USE_SINGLES = False
 USE_DOUBLES = True
 
 init_state = qml.qchem.hf_state(2, qubits)
@@ -203,6 +204,16 @@ else:
     normal_grad_fun = normal_circuit.gradient_fn(normal_circuit, shots = SHOTS)
     meta_grad_fun = meta_circuit.gradient_fn(meta_circuit, shots = SHOTS)
 
+# %%
+specs_func = qml.specs(
+    normal_circuit, expansion_strategy='gradient', max_expansion=50)
+specs_func(gaussian_encoding(weights, 1.4), test_hamiltonians[0])
+
+# %%
+specs_func = qml.specs(
+    meta_circuit, expansion_strategy='gradient', max_expansion=50)
+specs_func(weights, test_hamiltonians[0], 0.5)
+
 
 def meta_cost(params, train_hamiltonians, return_grad=True):
 
@@ -328,7 +339,7 @@ for num_run in range(RUNS):
 
     print(f'run {num_run} done!')
 
-    with open(f'exp_runs/meta_single_doubles_{GRADIENT_METHOD}_{num_run}.json', 'w') as f:
+    with open(f'exp_runs/meta_doubles_{GRADIENT_METHOD}_{num_run}.json', 'w') as f:
         f.write(json.dumps({
             "results": TRAINING_ENERGIES,
 
