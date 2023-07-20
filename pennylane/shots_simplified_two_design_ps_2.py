@@ -60,8 +60,8 @@ TRAINERS = {"gradient_descent":
             "demon_adam": {"fun": adam, "options": {'maxiter': 150, 'tol': 1e-4, 'demon': True, "verbose": False}}}
 
 
-LAYERS = 3
-GRADIENT_METHOD = "fd"  # fd, ps
+LAYERS = 2
+GRADIENT_METHOD = "ps"  # fd, ps
 
 
 gradient_methods = {"fd": "finite-diff",

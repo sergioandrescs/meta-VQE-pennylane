@@ -6,6 +6,8 @@ from pennylane import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from qiskit_aer.noise import NoiseModel
+from pennylane_qiskit import AerDevice
+
 
 from scipy.optimize import minimize
 
@@ -45,7 +47,7 @@ hamiltonian, qubits = qml.qchem.molecular_hamiltonian(
 )
 RUNS = 5
 
-SHOTS = 10000  # 1000, None. If none is used, the result is analytic
+SHOTS = 2000  # 1000, None. If none is used, the result is analytic
 
 WIRES = qubits
 
@@ -85,8 +87,7 @@ with open('./ibm_lagos_model_error.json', 'r') as reader:
     noise_data = json.loads(data)
     noise_model = NoiseModel.from_dict(noise_data)
 
-shared_dev = qml.device('qiskit.aer', wires=WIRES,
-                        noise_model=noise_model, shots=SHOTS)
+shared_dev = AerDevice(wires=WIRES, noise_model=noise_model, shots= SHOTS)
 
 train_points_indexes = [2, 6, 10, 14, 18]
 
