@@ -62,7 +62,7 @@ TRAINERS = {"gradient_descent":
             "adam": {"fun": adam, "options": {'maxiter': 150, 'tol': 1e-4, 'demon': False, "verbose": False}},
             "demon_adam": {"fun": adam, "options": {'maxiter': 150, 'tol': 1e-4, 'demon': True, "verbose": False}}}
 
-GRADIENT_METHOD = "fd"  # fd, ps
+GRADIENT_METHOD = "ps"  # fd, ps
 
 
 gradient_methods = {"fd": "finite-diff",
