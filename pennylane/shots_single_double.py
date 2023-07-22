@@ -61,7 +61,7 @@ TRAINERS = {"gradient_descent":
             "adam": {"fun": adam, "options": {'maxiter': 150, 'tol': 1e-4, 'demon': False, "verbose": False}},
             "demon_adam": {"fun": adam, "options": {'maxiter': 150, 'tol': 1e-4, 'demon': True, "verbose": False}}}
 
-GRADIENT_METHOD = "ps"  # fd, ps
+GRADIENT_METHOD = "fd"  # fd, ps
 
 
 gradient_methods = {"fd": "finite-diff",
@@ -81,7 +81,7 @@ shared_dev = qml.device("lightning.qubit", wires=WIRES, shots=SHOTS)
 
 train_points_indexes = [2, 6, 10, 14, 18]
 
-test_points = np.arange(0.6, 5, 0.2)
+test_points = np.arange(0.6, 5, 0.1)
 
 train_points = np.array([test_points[i] for i in train_points_indexes])
 
@@ -184,6 +184,7 @@ def normal_circuit(params, hamiltonian):
         qml.Hamiltonian(np.array(hamiltonian.coeffs), hamiltonian.ops)
     )
 
+
 @qml.qnode(shared_dev, diff_method=gradient_methods[GRADIENT_METHOD], shots=SHOTS)
 def meta_circuit(params, hamiltonian, r):
 
@@ -197,11 +198,12 @@ def meta_circuit(params, hamiltonian, r):
 
 
 if (GRADIENT_METHOD == 'fd'):
-    normal_grad_fun = normal_circuit.gradient_fn(normal_circuit, h=1e-3, shots = SHOTS)
-    meta_grad_fun = meta_circuit.gradient_fn(meta_circuit, h=1e-3, shots = SHOTS)
+    normal_grad_fun = normal_circuit.gradient_fn(
+        normal_circuit, h=1e-3, shots=SHOTS)
+    meta_grad_fun = meta_circuit.gradient_fn(meta_circuit, h=1e-3, shots=SHOTS)
 else:
-    normal_grad_fun = normal_circuit.gradient_fn(normal_circuit, shots = SHOTS)
-    meta_grad_fun = meta_circuit.gradient_fn(meta_circuit, shots = SHOTS)
+    normal_grad_fun = normal_circuit.gradient_fn(normal_circuit, shots=SHOTS)
+    meta_grad_fun = meta_circuit.gradient_fn(meta_circuit, shots=SHOTS)
 
 
 def meta_cost(params, train_hamiltonians, return_grad=True):
@@ -210,7 +212,7 @@ def meta_cost(params, train_hamiltonians, return_grad=True):
     gradients = []
 
     for count, train_ham in enumerate(train_hamiltonians):
-        
+
         distance = train_points[count]
         distance.requires_grad = False
 

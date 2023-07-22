@@ -59,7 +59,7 @@ TRAINERS = {"gradient_descent":
             "demon_adam": {"fun": adam, "options": {'maxiter': 150, 'tol': 1e-4, 'demon': True, "verbose": False}}}
 
 
-LAYERS = 1
+LAYERS = 3
 GRADIENT_METHOD = "fd"  # fd, ps
 
 
@@ -80,7 +80,7 @@ shared_dev = qml.device("lightning.qubit", wires=WIRES, shots=SHOTS)
 
 train_points_indexes = [2, 6, 10, 14, 18]
 
-test_points = np.arange(0.6, 5, 0.2)
+test_points = np.arange(0.6, 5, 0.1)
 
 train_points = np.array([test_points[i] for i in train_points_indexes])
 
